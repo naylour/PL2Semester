@@ -1,71 +1,56 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <queue>
 #include <limits>
 
 using namespace std;
 
-const long long INF = numeric_limits<long long>::max();
+const int INF = numeric_limits<int>::max();
 
-int main() {
-    ifstream inputFile("diameter.in");
-    ofstream outputFile("diameter.out");
+int main()
+{
+    ifstream fin("dijkstra.in");
+    ofstream fout("dijkstra.out");
 
-    int M, S, P;
-    inputFile >> M >> S >> P; // Читаем количество вершин, начальную и конечную вершины
+    int N, S, F;
 
-    vector<vector<long long>> graph(M, vector<long long>(M));
+    fin >> N >> S >> F;
 
-    // Считываем матрицу смежности
-    for (int i = 0; i < M; ++i) {
-        for (int j = 0; j < M; ++j) {
-            inputFile >> graph[i][j];
-            if (graph[i][j] == -1 && i != j) {
-                graph[i][j] = INF; // Заменяем -1 на INF для алгоритма
-            }
-        }
+    S--;
+    F--;
+
+    vector<vector<int>> graph(N, vector<int>(N));
+
+    for (int i = 0; i < N; ++i)
+        for (int j = 0; j < N; ++j)
+            fin >> graph[i][j];
+
+    vector<int> dist(N, INF);
+    vector<bool> visited(N, false);
+
+    dist[S] = 0;
+
+    for (int i = 0; i < N; ++i)
+    {
+        int v = -1;
+        for (int j = 0; j < N; ++j)
+            if (!visited[j] && (v == -1 || dist[j] < dist[v]))
+                v = j;
+
+        if (dist[v] == INF)
+            break;
+
+        visited[v] = true;
+
+        for (int u = 0; u < N; ++u)
+            if (graph[v][u] != -1 && dist[v] + graph[v][u] < dist[u])
+                dist[u] = dist[v] + graph[v][u];
     }
 
-    // Дейкстра
-    vector<long long> dist(M, INF);
-    dist[S - 1] = 0; // Начинаем с одной вершины, уменьшаем на 1 для обеспечения нулевой индексации
-
-    priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<pair<long long, int>>> pq;
-    pq.push({0, S - 1}); // (расстояние, вершина)
-
-    while (!pq.empty()) {
-        long long currentDist = pq.top().first;
-        int currentNode = pq.top().second;
-        pq.pop();
-
-        if (currentDist > dist[currentNode]) {
-            continue;
-        }
-
-        // Обход всех соседей
-        for (int neighbor = 0; neighbor < M; ++neighbor) {
-            if (graph[currentNode][neighbor] < INF) { // Если существует ребро
-                long long newDist = currentDist + graph[currentNode][neighbor];
-                if (newDist < dist[neighbor]) {
-                    dist[neighbor] = newDist;
-                    pq.push({newDist, neighbor});
-                }
-            }
-        }
-    }
-
-    // Выводим результат
-    long long result = dist[P - 1]; // Уменьшаем на 1 для обеспечения нулевой индексации
-    if (result == INF) {
-        outputFile << -1 << endl; // Если путь не существует
-    } else {
-        outputFile << result << endl; // Выводим найденное расстояние
-    }
-
-    // Закрываем файлы
-    inputFile.close();
-    outputFile.close();
+    if (dist[F] == INF)
+        fout << -1 << endl;
+    else
+        fout << dist[F] << endl;
 
     return 0;
 }
